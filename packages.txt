@@ -1,0 +1,12 @@
+libgl1-mesa-glx
+libglib2.0-0
+libsm6
+libxext6
+libxrender-dev
+libgomp1
+espeak
+espeak-data
+libespeak1
+libespeak-dev
+libasound2-dev
+pulseaudio
