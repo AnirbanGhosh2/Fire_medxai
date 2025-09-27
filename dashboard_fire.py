@@ -46,13 +46,35 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize TTS engine (once)
+# Initialize TTS engine (once) with robust error handling
 @st.cache_resource
 def get_tts_engine():
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 180)
-    engine.setProperty('volume', 1.0)
-    return engine
+    try:
+        engine = pyttsx3.init()
+        
+        # Try to set properties safely
+        try:
+            voices = engine.getProperty('voices')
+            if voices:
+                engine.setProperty('voice', voices[0].id)
+        except:
+            pass  # Continue without setting voice
+            
+        try:
+            engine.setProperty('rate', 180)
+        except:
+            pass  # Continue without setting rate
+            
+        try:
+            engine.setProperty('volume', 1.0)
+        except:
+            pass  # Continue without setting volume
+            
+        return engine
+        
+    except Exception as e:
+        st.warning(f"Text-to-speech not available in this environment: {str(e)}")
+        return None
 
 tts_engine = get_tts_engine()
 last_spoken = ""
@@ -73,8 +95,16 @@ def speak_async(text):
             return
         last_spoken = text
         last_spoken_time = time.time()
-        tts_engine.say(text)
-        tts_engine.runAndWait()
+        
+        if tts_engine:
+            try:
+                tts_engine.say(text)
+                tts_engine.runAndWait()
+            except Exception as e:
+                st.error(f"Speech synthesis failed: {str(e)}")
+        else:
+            # Fallback - just display the text in sidebar or as info
+            st.sidebar.info(f"🔊 {text}")
 
 # Initialize camera
 cap = None
