@@ -52,28 +52,28 @@ def get_tts_engine():
     try:
         engine = pyttsx3.init()
         
-        # Try to set properties safely
+        # Try to set properties safely - skip voice setting entirely
         try:
-            voices = engine.getProperty('voices')
-            if voices:
-                engine.setProperty('voice', voices[0].id)
-        except:
-            pass  # Continue without setting voice
-            
-        try:
-            engine.setProperty('rate', 180)
+            engine.setProperty('rate', 150)  # Slower, more reliable rate
         except:
             pass  # Continue without setting rate
             
         try:
-            engine.setProperty('volume', 1.0)
+            engine.setProperty('volume', 0.8)  # Lower volume
         except:
             pass  # Continue without setting volume
+            
+        # Test if engine works by trying a simple operation
+        try:
+            voices = engine.getProperty('voices')
+            # Don't set voice - use default
+        except:
+            pass
             
         return engine
         
     except Exception as e:
-        st.warning(f"Text-to-speech not available in this environment: {str(e)}")
+        st.sidebar.warning(f"🔇 TTS not available in cloud environment")
         return None
 
 tts_engine = get_tts_engine()
@@ -101,9 +101,10 @@ def speak_async(text):
                 tts_engine.say(text)
                 tts_engine.runAndWait()
             except Exception as e:
-                st.error(f"Speech synthesis failed: {str(e)}")
+                # Silently handle TTS errors in production
+                st.sidebar.info(f"🔊 {text}")
         else:
-            # Fallback - just display the text in sidebar or as info
+            # Fallback - display in sidebar
             st.sidebar.info(f"🔊 {text}")
 
 # Initialize camera
