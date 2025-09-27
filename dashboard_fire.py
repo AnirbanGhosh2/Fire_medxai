@@ -2,8 +2,6 @@ import streamlit as st
 from ultralytics import YOLO
 import cv2
 import numpy as np
-import pyttsx3
-import threading
 import time
 
 st.title("Fire Event Detection")
@@ -46,66 +44,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize TTS engine (once) with robust error handling
-@st.cache_resource
-def get_tts_engine():
-    try:
-        engine = pyttsx3.init()
-        
-        # Try to set properties safely - skip voice setting entirely
-        try:
-            engine.setProperty('rate', 150)  # Slower, more reliable rate
-        except:
-            pass  # Continue without setting rate
-            
-        try:
-            engine.setProperty('volume', 0.8)  # Lower volume
-        except:
-            pass  # Continue without setting volume
-            
-        # Test if engine works by trying a simple operation
-        try:
-            voices = engine.getProperty('voices')
-            # Don't set voice - use default
-        except:
-            pass
-            
-        return engine
-        
-    except Exception as e:
-        st.sidebar.warning(f"🔇 TTS not available in cloud environment")
-        return None
-
-tts_engine = get_tts_engine()
-last_spoken = ""
-last_spoken_time = 0
-
 # Placeholders
 frame_placeholder = st.empty()
 message_placeholder = st.empty()
 status_placeholder = st.empty()
-
-# Lock for TTS
-tts_lock = threading.Lock()
-
-def speak_async(text):
-    global last_spoken, last_spoken_time
-    with tts_lock:
-        if text == last_spoken and time.time() - last_spoken_time < 5:
-            return
-        last_spoken = text
-        last_spoken_time = time.time()
-        
-        if tts_engine:
-            try:
-                tts_engine.say(text)
-                tts_engine.runAndWait()
-            except Exception as e:
-                # Silently handle TTS errors in production
-                st.sidebar.info(f"🔊 {text}")
-        else:
-            # Fallback - display in sidebar
-            st.sidebar.info(f"🔊 {text}")
 
 # Initialize camera
 cap = None
@@ -150,10 +92,8 @@ try:
                 unsafe_allow_html=True
             )
 
-            # Voice alert for new detections
-            if current_detection != last_detection:
-                speak_async(f"Marine vessel detected: {current_detection}")
-                last_detection = current_detection
+            # Update last detection
+            last_detection = current_detection
         else:
             message_placeholder.empty()
             last_detection = ""
